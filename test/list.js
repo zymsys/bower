@@ -46,4 +46,16 @@ describe('list', function () {
     });
   });
 
+  it('Should emit end event when using the --paths option', function (next) {
+    list({ paths: true }).on('end', function () {
+      next();
+    });
+  });
+
+  it('Should emit end event when using the --map option', function (next) {
+    list({ map: true }).on('end', function () {
+      next();
+    });
+  });
+
 });
