@@ -6,8 +6,10 @@ var fs         = require('fs');
 var mkdirp     = require('mkdirp');
 var config     = require('../lib/core/config');
 var cacheClean = require('../lib/commands/cache-clean');
+var events     = require('events');
 
 describe('cache-clean', function () {
+
   function clean(done) {
     var del = 0;
 
@@ -42,6 +44,22 @@ describe('cache-clean', function () {
     fs.writeFileSync(path.join(dir, 'some-file'), 'bower is awesome');
     fs.writeFileSync(path.join(someDir, 'some-other-file'), 'bower is fantastic');
   }
+
+  it('Should have line method', function () {
+    assert(!!cacheClean.line);
+  });
+
+  it('Should return an emiter', function () {
+    assert(cacheClean() instanceof events.EventEmitter);
+  });
+
+  it('Should emit end event', function (next) {
+    simulatePackage('some');
+    cacheClean(['some'])
+      .on('end', function (data) {
+        next();
+      });
+  });
 
   it('Should clean the entire cache', function (next) {
     simulatePackage('some-package');
@@ -88,13 +106,15 @@ describe('cache-clean', function () {
 
   it('Should throw error on unknown package', function (next) {
     var cleaner = cacheClean(['not-cached-package']);
+    var ok = false;
 
     cleaner.on('error', function (err) {
-      if (/not\-cached\-package/.test(err)) next();
+      if (/not\-cached\-package/.test(err)) ok = true;
     });
 
     cleaner.on('end', function () {
-      throw new Error('Should have thrown an error.');
+      if (!ok) throw new Error('Should have thrown an error.');
+      next();
     });
   });
 
